@@ -7,4 +7,5 @@
 	<string name="copy_example">Копировать пример</string>
 	<string name="copy_syntax">Копировать синтаксис</string>
 	<string name="share">Поделиться</string>
+	<string name="about_text">Termux Guide — офлайн-справочник по Termux и Linux-командам. Версия 1.0</string>
 </resources>

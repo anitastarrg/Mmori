@@ -34,6 +34,47 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
+    @Override
+    public boolean onCreateOptionsMenu(android.view.Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(android.view.MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_random) {
+            if (!visibleCommands.isEmpty()) {
+                int idx = (int) (Math.random() * visibleCommands.size());
+                showDetailsDialog(visibleCommands.get(idx));
+            }
+            return true;
+        } else if (id == R.id.action_reset) {
+            searchView.setQuery("", false);
+            if (!categories.isEmpty()) spinnerCategory.setSelection(0);
+            applyFilter("", categories.isEmpty() ? getString(R.string.all) : categories.get(0));
+            return true;
+        } else if (id == R.id.action_toggle_categories) {
+            int vis = spinnerCategory.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE;
+            spinnerCategory.setVisibility(vis);
+            return true;
+        } else if (id == R.id.action_share_app) {
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setType("text/plain");
+            sendIntent.putExtra(Intent.EXTRA_TEXT, "Termux Guide — справочник по Termux. Рекомендую!");
+            startActivity(Intent.createChooser(sendIntent, getString(R.string.share)));
+            return true;
+        } else if (id == R.id.action_about) {
+            new android.support.v7.app.AlertDialog.Builder(this)
+                    .setTitle(R.string.app_name)
+                    .setMessage(R.string.about_text)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private SearchView searchView;
     private ListView listView;
     private Spinner spinnerCategory;
@@ -51,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle(getString(R.string.app_name));
 
         searchView = findViewById(R.id.search_view);
         spinnerCategory = findViewById(R.id.spinner_category);

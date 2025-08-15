@@ -99,7 +99,7 @@
 	{"name":"head","short":"Первые строки","syntax":"head [-n N] <file>","examples":"head -n 20 log.txt","notes":"","package":"coreutils","category":"Текст"},
 	{"name":"tail","short":"Последние строки","syntax":"tail [-f] <file>","examples":"tail -f app.log","notes":"","package":"coreutils","category":"Текст"},
 	{"name":"grep","short":"Поиск по тексту","syntax":"grep [опции] <pattern> <files>","examples":"grep -R \"error\" src/","notes":"Поддержка regex","package":"grep","category":"Текст"},
-	{"name":"sed","short":"Потоковый редактор","syntax":"sed 's/old/new/g' <file>","examples":"sed -n '1,10p' file.txt","notes":"","package":"sed","category":"Текст"},
+	{"name":"sed","short":"Потоковый редактор","syntax":"sed 's/old/new/g' <file>","examples":"sed -н '1,10p' file.txt","notes":"","package":"sed","category":"Текст"},
 	{"name":"awk","short":"Обработка текста","syntax":"awk '{print $1}' <file>","examples":"awk -F, '{print $2}' data.csv","notes":"","package":"awk","category":"Текст"},
 	{"name":"sort","short":"Сортировка строк","syntax":"sort [опции] <file>","examples":"sort -u names.txt","notes":"","package":"coreutils","category":"Текст"},
 	{"name":"uniq","short":"Уникальные строки","syntax":"uniq [опции] <file>","examples":"sort file | uniq -c","notes":"","package":"coreutils","category":"Текст"},
@@ -139,17 +139,20 @@
 	{"name":"nano","short":"Текстовый редактор","syntax":"nano <file>","examples":"nano README.md","notes":"","package":"nano","category":"Редакторы"},
 	{"name":"vim","short":"Vim","syntax":"vim <file>","examples":"vim main.c","notes":"","package":"vim","category":"Редакторы"},
 	{"name":"nvim","short":"Neovim","syntax":"nvim <file>","examples":"nvim init.vim","notes":"","package":"neovim","category":"Редакторы"},
+	{"name":"micro","short":"Редактор micro","syntax":"micro <file>","examples":"micro notes.txt","notes":"","package":"micro","category":"Редакторы"},
 
 	{"name":"make","short":"Сборка проектов (Makefile)","syntax":"make [цель]","examples":"make -j4","notes":"","package":"make","category":"Разработка"},
 	{"name":"cmake","short":"Генератор сборок","syntax":"cmake -S . -B build","examples":"cmake --build build -j4","notes":"","package":"cmake","category":"Разработка"},
 	{"name":"pkg-config","short":"Пути инклюдов/библиотек","syntax":"pkg-config --cflags --libs <lib>","examples":"pkg-config --cflags --libs libpng","notes":"","package":"pkg-config","category":"Разработка"},
 	{"name":"clang","short":"Компилятор C/C++","syntax":"clang file.c -o app","examples":"clang main.c -lm -O2","notes":"","package":"clang","category":"Разработка"},
 	{"name":"g++","short":"Компилятор C++","syntax":"g++ file.cpp -o app","examples":"g++ main.cpp -std=c++17","notes":"Синоним clang++","package":"clang","category":"Разработка"},
+	{"name":"lldb","short":"Отладчик LLDB","syntax":"lldb <bin>","examples":"lldb ./a.out","notes":"","package":"lldb","category":"Разработка"},
 
 	{"name":"python","short":"Интерпретатор Python","syntax":"python file.py","examples":"python -m pip install requests","notes":"","package":"python","category":"Языки"},
 	{"name":"pip","short":"Менеджер пакетов Python","syntax":"pip install <pkg>","examples":"pip install numpy","notes":"","package":"python","category":"Языки"},
 	{"name":"node","short":"Node.js","syntax":"node file.js","examples":"node -v","notes":"","package":"nodejs","category":"Языки"},
 	{"name":"npm","short":"Менеджер пакетов Node.js","syntax":"npm install [--global] <pkg>","examples":"npm install -g yarn","notes":"","package":"nodejs","category":"Языки"},
+	{"name":"yarn","short":"Менеджер пакетов Yarn","syntax":"yarn add <pkg>","examples":"yarn init -y","notes":"","package":"nodejs","category":"Языки"},
 	{"name":"java","short":"Запуск Java","syntax":"java -jar app.jar","examples":"javac Main.java && java Main","notes":"","package":"openjdk-17","category":"Языки"},
 	{"name":"javac","short":"Компилятор Java","syntax":"javac <files>","examples":"javac Main.java","notes":"","package":"openjdk-17","category":"Языки"},
 	{"name":"go","short":"Go","syntax":"go run <file.go>","examples":"go build ./...","notes":"","package":"golang","category":"Языки"},
@@ -161,10 +164,18 @@
 	{"name":"lua","short":"Lua","syntax":"lua <file.lua>","examples":"luarocks install busted","notes":"","package":"lua","category":"Языки"},
 
 	{"name":"git","short":"Система контроля версий","syntax":"git clone <repo>\ngit pull\ngit push","examples":"git clone https://github.com/termux/termux-packages","notes":"","package":"git","category":"VCS"},
+	{"name":"git status","short":"Статус репозитория","syntax":"git status","examples":"git status","notes":"","package":"git","category":"VCS"},
+	{"name":"git commit","short":"Фиксация изменений","syntax":"git commit -m 'msg'","examples":"git commit -am 'upd'","notes":"","package":"git","category":"VCS"},
+	{"name":"git branch","short":"Ветки","syntax":"git branch","examples":"git checkout -b feature","notes":"","package":"git","category":"VCS"},
 
 	{"name":"sqlite3","short":"CLI для SQLite","syntax":"sqlite3 <db.sqlite>","examples":"sqlite3 test.db 'select 1;'","notes":"","package":"sqlite","category":"Базы данных"},
 	{"name":"psql","short":"CLI для PostgreSQL","syntax":"psql -h <host> -U <user> -d <db>","examples":"psql -h localhost -U user -d db","notes":"","package":"postgresql","category":"Базы данных"},
+	{"name":"redis-cli","short":"CLI для Redis","syntax":"redis-cli -h <host>","examples":"redis-cli PING","notes":"","package":"redis","category":"Базы данных"},
 
 	{"name":"proot","short":"Пользовательский chroot","syntax":"proot -S <rootfs> /bin/bash","examples":"proot -S ubuntu-fs /usr/bin/env -i HOME=/root bash","notes":"","package":"proot","category":"Proot"},
-	{"name":"proot-distro","short":"Дистрибутивы в proot","syntax":"proot-distro install <distro>\nproot-distro login <distro>","examples":"proot-distro install ubuntu\nproot-distro login ubuntu","notes":"","package":"proot-distro","category":"Proot"}
+	{"name":"proot-distro","short":"Дистрибутивы в proot","syntax":"proot-distro install <distro>\nproot-distro login <distro>","examples":"proot-distro install ubuntu\nproot-distro login ubuntu","notes":"","package":"proot-distro","category":"Proot"},
+
+	{"name":"ffmpeg","short":"Мультимедиа конвертер","syntax":"ffmpeg -i in.mp4 out.mp3","examples":"ffmpeg -i in.wav -ar 44100 -ac 2 out.wav","notes":"","package":"ffmpeg","category":"Мультимедиа"},
+	{"name":"sox","short":"Аудио инструментарий","syntax":"sox in.wav out.wav trim 0 10","examples":"sox in.wav out.mp3","notes":"","package":"sox","category":"Мультимедиа"},
+	{"name":"magick","short":"ImageMagick","syntax":"magick in.png -resize 50% out.png","examples":"magick convert in.jpg -quality 80 out.jpg","notes":"","package":"imagemagick","category":"Мультимедиа"}
 ]

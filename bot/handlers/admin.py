@@ -25,7 +25,11 @@ async def cmd_status(message: Message, chat_settings: ChatSettings) -> None:
 	status_lines = [
 		f"Welcome: {'ON' if chat_settings.welcome_enabled else 'OFF'}",
 		f"Profanity: {'ON' if chat_settings.profanity_filter_enabled else 'OFF'}",
+		f"Profanity words: {'set' if chat_settings.profanity_words else 'empty'}",
 		f"Links: {'ON' if chat_settings.link_filter_enabled else 'OFF'}",
+		f"Stickers: {'BLOCK' if chat_settings.block_stickers_enabled else 'ALLOW'}",
+		f"Forwards: {'BLOCK' if chat_settings.block_forwards_enabled else 'ALLOW'}",
+		f"Join guard: {'ON' if chat_settings.join_guard_enabled else 'OFF'} ({chat_settings.join_guard_timeout_seconds}s)",
 		f"Antiflood: {chat_settings.flood_messages}/{chat_settings.flood_interval_seconds}s",
 		f"Warn threshold: {chat_settings.warn_threshold} -> {chat_settings.warn_action} ({chat_settings.punish_duration_seconds}s)",
 		f"CAPS: >={chat_settings.caps_threshold_percent}%",
@@ -43,6 +47,9 @@ async def cmd_config(message: Message, chat_settings: ChatSettings) -> None:
 	kb.button(text=f"Welcome: {'ON' if chat_settings.welcome_enabled else 'OFF'}", callback_data="toggle_welcome")
 	kb.button(text=f"Profanity: {'ON' if chat_settings.profanity_filter_enabled else 'OFF'}", callback_data="toggle_profanity")
 	kb.button(text=f"Links: {'ON' if chat_settings.link_filter_enabled else 'OFF'}", callback_data="toggle_links")
+	kb.button(text=f"Stickers: {'BLOCK' if chat_settings.block_stickers_enabled else 'ALLOW'}", callback_data="toggle_stickers")
+	kb.button(text=f"Forwards: {'BLOCK' if chat_settings.block_forwards_enabled else 'ALLOW'}", callback_data="toggle_forwards")
+	kb.button(text=f"Join guard: {'ON' if chat_settings.join_guard_enabled else 'OFF'}", callback_data="toggle_join_guard")
 	kb.button(text="Export", callback_data="export_settings")
 	kb.button(text="Import", callback_data="import_settings")
 	kb.adjust(1)
@@ -53,12 +60,14 @@ async def cmd_config(message: Message, chat_settings: ChatSettings) -> None:
 		"/setcaps <percent>\n"
 		"/setmentions <count>\n"
 		"/setprofanityregex <pattern>\n"
-		"/setrefdomains <domain1,domain2,...>",
+		"/setprofanitywords <w1,w2,...>\n"
+		"/setrefdomains <domain1,domain2,...>\n"
+		"/setjoinguard <on|off> <timeout_seconds>",
 		reply_markup=kb.as_markup(),
 	)
 
 
-@router.callback_query(lambda c: c.data in {"toggle_welcome", "toggle_profanity", "toggle_links"})
+@router.callback_query(lambda c: c.data in {"toggle_welcome", "toggle_profanity", "toggle_links", "toggle_stickers", "toggle_forwards", "toggle_join_guard"})
 async def toggles(callback: CallbackQuery, session: AsyncSession, chat_settings: ChatSettings) -> None:
 	if not callback.message:
 		return
@@ -69,6 +78,9 @@ async def toggles(callback: CallbackQuery, session: AsyncSession, chat_settings:
 		"toggle_welcome": ("welcome_enabled", not chat_settings.welcome_enabled),
 		"toggle_profanity": ("profanity_filter_enabled", not chat_settings.profanity_filter_enabled),
 		"toggle_links": ("link_filter_enabled", not chat_settings.link_filter_enabled),
+		"toggle_stickers": ("block_stickers_enabled", not chat_settings.block_stickers_enabled),
+		"toggle_forwards": ("block_forwards_enabled", not chat_settings.block_forwards_enabled),
+		"toggle_join_guard": ("join_guard_enabled", not chat_settings.join_guard_enabled),
 	}
 	field, new_val = field_map[callback.data]
 	await update_settings(session, chat_settings.chat_id, **{field: new_val})
@@ -173,6 +185,19 @@ async def cmd_setprofanityregex(message: Message, session: AsyncSession, chat_se
 	await message.reply("Регулярное выражение мата обновлено")
 
 
+@router.message(Command("setprofanitywords"))
+async def cmd_setprofanitywords(message: Message, session: AsyncSession, chat_settings: ChatSettings) -> None:
+	if not await is_admin(message):
+		await message.reply("Только админы")
+		return
+	parts = message.text.split(maxsplit=1)
+	if len(parts) != 2:
+		await message.reply("Использование: /setprofanitywords <w1,w2,...>")
+		return
+	await update_settings(session, chat_settings.chat_id, profanity_words=parts[1])
+	await message.reply("Список запрещенных слов обновлен")
+
+
 @router.message(Command("setrefdomains"))
 async def cmd_setrefdomains(message: Message, session: AsyncSession, chat_settings: ChatSettings) -> None:
 	if not await is_admin(message):
@@ -184,6 +209,24 @@ async def cmd_setrefdomains(message: Message, session: AsyncSession, chat_settin
 		return
 	await update_settings(session, chat_settings.chat_id, referral_domains=parts[1], link_filter_enabled=True)
 	await message.reply("Список запрещенных доменов обновлен")
+
+
+@router.message(Command("setjoinguard"))
+async def cmd_setjoinguard(message: Message, session: AsyncSession, chat_settings: ChatSettings) -> None:
+	if not await is_admin(message):
+		await message.reply("Только админы")
+		return
+	parts = message.text.split()
+	if len(parts) != 3 or parts[1] not in {"on", "off"} or not parts[2].isdigit():
+		await message.reply("Использование: /setjoinguard <on|off> <timeout_seconds>")
+		return
+	await update_settings(
+		session,
+		chat_settings.chat_id,
+		join_guard_enabled=(parts[1] == "on"),
+		join_guard_timeout_seconds=int(parts[2]),
+	)
+	await message.reply("Join guard обновлен")
 
 
 @router.callback_query(lambda c: c.data == "export_settings")

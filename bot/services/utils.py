@@ -26,6 +26,14 @@ def contains_profanity(text: str, regex_pattern: Optional[str]) -> bool:
 		return False
 
 
+def contains_profanity_words(text: str, words_csv: Optional[str]) -> bool:
+	if not words_csv:
+		return False
+	words = [w.strip().lower() for w in words_csv.split(",") if w.strip()]
+	txt = text.lower()
+	return any(f" {w} " in f" {txt} " for w in words)
+
+
 def contains_forbidden_link(text: str, domains_csv: Optional[str]) -> bool:
 	if not domains_csv:
 		return False

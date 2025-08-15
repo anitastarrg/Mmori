@@ -22,6 +22,7 @@ class ChatSettings(Base):
 
     profanity_filter_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     profanity_regex: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    profanity_words: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # comma-separated
 
     link_filter_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     referral_domains: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # comma-separated
@@ -35,6 +36,13 @@ class ChatSettings(Base):
     warn_threshold: Mapped[int] = mapped_column(Integer, default=3)
     warn_action: Mapped[str] = mapped_column(String(16), default="mute")  # mute|ban|none
     punish_duration_seconds: Mapped[int] = mapped_column(Integer, default=3600)
+
+    join_guard_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    join_guard_timeout_seconds: Mapped[int] = mapped_column(Integer, default=60)
+    join_guard_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    block_stickers_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    block_forwards_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -61,6 +69,6 @@ class ActionLog(Base):
     chat_id: Mapped[int] = mapped_column(BigInteger, index=True)
     target_user_id: Mapped[int] = mapped_column(BigInteger, index=True)
     moderator_user_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
-    action: Mapped[str] = mapped_column(String(32))  # delete|warn|mute|ban|unmute|unban
+    action: Mapped[str] = mapped_column(String(32))  # delete|warn|mute|ban|unmute|unban|kick
     reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

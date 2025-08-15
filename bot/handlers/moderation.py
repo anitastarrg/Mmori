@@ -36,7 +36,7 @@ async def delete_message_safe(message: Message) -> None:
 
 async def is_admin(message: Message) -> bool:
 	member = await message.bot.get_chat_member(message.chat.id, message.from_user.id)
-	return member.status in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER}
+	return member.status in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER, ChatMemberStatus.CREATOR}
 
 
 @router.message(F.text)
@@ -61,7 +61,7 @@ async def content_filters(message: Message, session: AsyncSession, chat_settings
 			return
 		return
 
-	# Profanity
+	# Profanity regex
 	if chat_settings.profanity_filter_enabled and utils.contains_profanity(text, chat_settings.profanity_regex):
 		await delete_message_safe(message)
 		await add_action_log(session, message.chat.id, message.from_user.id, "delete", message.from_user.id, "Нецензурная лексика")
@@ -69,6 +69,12 @@ async def content_filters(message: Message, session: AsyncSession, chat_settings
 		if count >= chat_settings.warn_threshold:
 			action = await apply_punishment(message.bot, session, chat_settings, message.from_user.id, message.from_user.id, "Мат")
 			await reset_warning(session, chat_settings.chat_id, message.from_user.id)
+		return
+
+	# Profanity words
+	if utils.contains_profanity_words(text, chat_settings.profanity_words):
+		await delete_message_safe(message)
+		await add_action_log(session, message.chat.id, message.from_user.id, "delete", message.from_user.id, "Запрещенные слова")
 		return
 
 	# Links
@@ -92,6 +98,18 @@ async def content_filters(message: Message, session: AsyncSession, chat_settings
 		await delete_message_safe(message)
 		await add_action_log(session, message.chat.id, message.from_user.id, "delete", message.from_user.id, "Спам упоминаниями")
 		return
+
+
+@router.message(F.sticker)
+async def block_stickers(message: Message, chat_settings: ChatSettings) -> None:
+	if chat_settings.block_stickers_enabled:
+		await delete_message_safe(message)
+
+
+@router.message(F.forward_origin)
+async def block_forwards(message: Message, chat_settings: ChatSettings) -> None:
+	if chat_settings.block_forwards_enabled:
+		await delete_message_safe(message)
 
 
 @router.message(Command("warn"))
@@ -161,3 +179,20 @@ async def cmd_unban(message: Message, session: AsyncSession) -> None:
 	target = message.reply_to_message.from_user
 	ok = await unban(message.bot, session, message.chat.id, target.id, message.from_user.id)
 	await message.reply("Разбанен" if ok else "Не удалось разбанить")
+
+
+@router.message(Command("purge"))
+async def cmd_purge(message: Message) -> None:
+	if not await is_admin(message):
+		await message.reply("Только админы")
+		return
+	if not message.reply_to_message:
+		await message.reply("Ответьте на первое сообщение для удаления до текущего")
+		return
+	start_id = message.reply_to_message.message_id
+	end_id = message.message_id
+	for msg_id in range(start_id, end_id + 1):
+		try:
+			await message.bot.delete_message(message.chat.id, msg_id)
+		except Exception:
+			pass

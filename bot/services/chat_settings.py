@@ -17,6 +17,7 @@ DEFAULT_SETTINGS = ChatSettings(
 	autodelete_welcome_seconds=0,
 	profanity_filter_enabled=False,
 	profanity_regex=None,
+	profanity_words=None,
 	link_filter_enabled=False,
 	referral_domains=None,
 	caps_threshold_percent=80,
@@ -26,6 +27,11 @@ DEFAULT_SETTINGS = ChatSettings(
 	warn_threshold=3,
 	warn_action="mute",
 	punish_duration_seconds=3600,
+	join_guard_enabled=False,
+	join_guard_timeout_seconds=60,
+	join_guard_message="Пожалуйста, подтвердите, что вы не бот, нажав кнопку ниже",
+	block_stickers_enabled=False,
+	block_forwards_enabled=False,
 )
 
 
@@ -42,6 +48,7 @@ async def get_or_create_settings(session: AsyncSession, chat_id: int, chat_title
 			autodelete_welcome_seconds=DEFAULT_SETTINGS.autodelete_welcome_seconds,
 			profanity_filter_enabled=DEFAULT_SETTINGS.profanity_filter_enabled,
 			profanity_regex=DEFAULT_SETTINGS.profanity_regex,
+			profanity_words=DEFAULT_SETTINGS.profanity_words,
 			link_filter_enabled=DEFAULT_SETTINGS.link_filter_enabled,
 			referral_domains=DEFAULT_SETTINGS.referral_domains,
 			caps_threshold_percent=DEFAULT_SETTINGS.caps_threshold_percent,
@@ -51,6 +58,11 @@ async def get_or_create_settings(session: AsyncSession, chat_id: int, chat_title
 			warn_threshold=DEFAULT_SETTINGS.warn_threshold,
 			warn_action=DEFAULT_SETTINGS.warn_action,
 			punish_duration_seconds=DEFAULT_SETTINGS.punish_duration_seconds,
+			join_guard_enabled=DEFAULT_SETTINGS.join_guard_enabled,
+			join_guard_timeout_seconds=DEFAULT_SETTINGS.join_guard_timeout_seconds,
+			join_guard_message=DEFAULT_SETTINGS.join_guard_message,
+			block_stickers_enabled=DEFAULT_SETTINGS.block_stickers_enabled,
+			block_forwards_enabled=DEFAULT_SETTINGS.block_forwards_enabled,
 		)
 		session.add(settings)
 		await session.commit()

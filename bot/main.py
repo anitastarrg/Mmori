@@ -8,6 +8,7 @@ from aiogram.enums import ParseMode
 
 from bot.config import get_settings
 from bot.db.session import Base, get_engine
+from bot.db.migrate import ensure_columns
 from bot.handlers import admin as admin_handlers
 from bot.handlers import common as common_handlers
 from bot.handlers import moderation as moderation_handlers
@@ -26,6 +27,7 @@ async def init_db() -> None:
 		os.makedirs(dirname, exist_ok=True)
 	async with engine.begin() as conn:
 		await conn.run_sync(Base.metadata.create_all)
+	await ensure_columns(engine)
 
 
 async def main() -> None:

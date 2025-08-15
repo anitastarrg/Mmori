@@ -11,12 +11,29 @@
 		android:layout_height="wrap_content"
 		android:queryHint="@string/search_hint" />
 
+	<Spinner
+		android:id="@+id/spinner_category"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:paddingTop="4dp"
+		android:paddingBottom="4dp" />
+
 	<ListView
 		android:id="@+id/list_view"
 		android:layout_width="match_parent"
 		android:layout_height="0dp"
 		android:layout_weight="1"
 		android:divider="@android:color/darker_gray"
-		android:dividerHeight="1dp" />
+		android:dividerHeight="1dp"
+		android:fastScrollEnabled="true" />
+
+	<TextView
+		android:id="@+id/empty_view"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="@string/no_results"
+		android:gravity="center"
+		android:padding="16dp"
+		android:visibility="gone" />
 
 </LinearLayout>

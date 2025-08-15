@@ -2,4 +2,9 @@
 	<string name="app_name">Termux Guide</string>
 	<string name="search_hint">Поиск команд</string>
 	<string name="no_results">Ничего не найдено</string>
+	<string name="all">Все</string>
+	<string name="category">Категория</string>
+	<string name="copy_example">Копировать пример</string>
+	<string name="copy_syntax">Копировать синтаксис</string>
+	<string name="share">Поделиться</string>
 </resources>

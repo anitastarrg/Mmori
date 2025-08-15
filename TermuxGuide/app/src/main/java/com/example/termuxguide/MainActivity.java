@@ -1,16 +1,23 @@
 package com.example.termuxguide;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.app.AlertDialog;
 import android.app.Activity;
+import android.content.DialogInterface;
+import android.content.ClipboardManager;
+import android.content.ClipData;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SearchView;
+import android.widget.Spinner;
+import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,16 +26,21 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class MainActivity extends Activity {
 
     private SearchView searchView;
     private ListView listView;
+    private Spinner spinnerCategory;
+    private TextView emptyView;
 
-    private ArrayAdapter<String> listAdapter;
+    private CommandAdapter listAdapter;
     private final List<Command> allCommands = new ArrayList<Command>();
-    private final List<String> visibleItems = new ArrayList<String>();
+    private final List<Command> visibleCommands = new ArrayList<Command>();
+    private final List<String> categories = new ArrayList<String>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,53 +48,86 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         searchView = findViewById(R.id.search_view);
+        spinnerCategory = findViewById(R.id.spinner_category);
         listView = findViewById(R.id.list_view);
+        emptyView = findViewById(R.id.empty_view);
 
         loadCommandsFromAssets(this);
         sortCommandsByName();
-        rebuildVisibleItems("");
+        buildCategories();
 
-        listAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, visibleItems);
+        listAdapter = new CommandAdapter(this, visibleCommands);
         listView.setAdapter(listAdapter);
+        listView.setEmptyView(emptyView);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String item = visibleItems.get(position);
-                showDetailsDialog(item);
+                Command cmd = visibleCommands.get(position);
+                showDetailsDialog(cmd);
             }
         });
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                filterList(query);
+                applyFilter(query, (String) spinnerCategory.getSelectedItem());
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                filterList(newText);
+                applyFilter(newText, (String) spinnerCategory.getSelectedItem());
                 return true;
             }
         });
+
+        ArrayAdapter<String> catAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, categories);
+        catAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerCategory.setAdapter(catAdapter);
+        spinnerCategory.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                applyFilter(searchView.getQuery().toString(), categories.get(position));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) { }
+        });
+
+        // Начальная фильтрация после установки адаптеров
+        if (!categories.isEmpty()) {
+            applyFilter("", categories.get(0));
+        }
     }
 
-    private void filterList(String query) {
-        rebuildVisibleItems(query);
+    private void buildCategories() {
+        Set<String> set = new LinkedHashSet<String>();
+        set.add(getString(R.string.all));
+        for (Command c : allCommands) {
+            if (!TextUtils.isEmpty(c.category)) set.add(c.category);
+        }
+        categories.clear();
+        categories.addAll(set);
+    }
+
+    private void applyFilter(String query, String category) {
+        visibleCommands.clear();
+        String q = query == null ? "" : query.trim().toLowerCase();
+        boolean all = TextUtils.equals(category, getString(R.string.all));
+        for (Command cmd : allCommands) {
+            if (!all && !TextUtils.equals(cmd.category, category)) continue;
+            if (TextUtils.isEmpty(q)) {
+                visibleCommands.add(cmd);
+            } else {
+                String hay = (cmd.name + " " + cmd.shortDescription + " " + cmd.syntax + " " + cmd.examples + " " + cmd.notes + " " + cmd.packageName + " " + cmd.category).toLowerCase();
+                if (hay.contains(q)) visibleCommands.add(cmd);
+            }
+        }
         listAdapter.notifyDataSetChanged();
     }
 
-    private void showDetailsDialog(String listItemText) {
-        // listItemText format: "command — short"
-        String name = listItemText;
-        int sep = listItemText.indexOf(" — ");
-        if (sep != -1) {
-            name = listItemText.substring(0, sep);
-        }
-        Command command = findByName(name);
-        if (command == null) return;
-
+    private void showDetailsDialog(final Command command) {
         StringBuilder message = new StringBuilder();
         if (!TextUtils.isEmpty(command.shortDescription)) {
             message.append(command.shortDescription).append("\n\n");
@@ -97,14 +142,53 @@ public class MainActivity extends Activity {
             message.append("Заметки: \n").append(command.notes).append("\n\n");
         }
         if (!TextUtils.isEmpty(command.packageName)) {
-            message.append("Пакет: ").append(command.packageName);
+            message.append("Пакет: ").append(command.packageName).append("\n");
+        }
+        if (!TextUtils.isEmpty(command.category)) {
+            message.append("Категория: ").append(command.category);
         }
 
-        new AlertDialog.Builder(this)
+        AlertDialog.Builder b = new AlertDialog.Builder(this)
                 .setTitle(command.name)
                 .setMessage(message.toString().trim())
                 .setPositiveButton(android.R.string.ok, null)
-                .show();
+                .setNeutralButton(getString(R.string.share), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        shareCommand(command);
+                    }
+                });
+        if (!TextUtils.isEmpty(command.examples)) {
+            b.setNegativeButton(getString(R.string.copy_example), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    copyToClipboard(command.examples);
+                }
+            });
+        } else if (!TextUtils.isEmpty(command.syntax)) {
+            b.setNegativeButton(getString(R.string.copy_syntax), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    copyToClipboard(command.syntax);
+                }
+            });
+        }
+        b.show();
+    }
+
+    private void shareCommand(Command c) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(c.name).append("\n");
+        if (!TextUtils.isEmpty(c.syntax)) sb.append(c.syntax).append("\n");
+        if (!TextUtils.isEmpty(c.examples)) sb.append(c.examples).append("\n");
+        Intent sendIntent = new Intent(Intent.ACTION_SEND);
+        sendIntent.setType("text/plain");
+        sendIntent.putExtra(Intent.EXTRA_TEXT, sb.toString().trim());
+        startActivity(Intent.createChooser(sendIntent, getString(R.string.share)));
+    }
+
+    private void copyToClipboard(String text) {
+        ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (cm != null) {
+            cm.setPrimaryClip(ClipData.newPlainText("text", text));
+        }
     }
 
     private void sortCommandsByName() {
@@ -116,38 +200,10 @@ public class MainActivity extends Activity {
         });
     }
 
-    private void rebuildVisibleItems(String query) {
-        visibleItems.clear();
-        String q = query == null ? "" : query.trim().toLowerCase();
-        for (Command cmd : allCommands) {
-            String row = cmd.name + " — " + (TextUtils.isEmpty(cmd.shortDescription) ? "" : cmd.shortDescription);
-            if (TextUtils.isEmpty(q)) {
-                visibleItems.add(row);
-            } else {
-                String hay = (cmd.name + " " + cmd.shortDescription + " " + cmd.syntax + " " + cmd.examples + " " + cmd.notes + " " + cmd.packageName).toLowerCase();
-                if (hay.contains(q)) {
-                    visibleItems.add(row);
-                }
-            }
-        }
-        if (visibleItems.isEmpty()) {
-            visibleItems.add(getString(R.string.no_results));
-        }
-    }
-
-    private Command findByName(String name) {
-        for (Command c : allCommands) {
-            if (c.name.equalsIgnoreCase(name)) return c;
-        }
-        return null;
-    }
-
     private void loadCommandsFromAssets(Context context) {
         allCommands.clear();
         String json = readAssetText(context.getAssets(), "commands.json");
         if (TextUtils.isEmpty(json)) return;
-        // Very small and AIDE-safe JSON parse (manual) expecting array of objects with fixed keys
-        // Format: [{"name":"apt","short":"...","syntax":"...","examples":"...","notes":"...","package":"..."}, ...]
         List<String> objects = splitTopLevelObjects(json);
         for (String obj : objects) {
             Command c = parseCommandObject(obj);
@@ -178,10 +234,9 @@ public class MainActivity extends Activity {
     }
 
     private List<String> splitTopLevelObjects(String json) {
-        List<String> out = new ArrayList<>();
+        List<String> out = new ArrayList<String>();
         if (TextUtils.isEmpty(json)) return out;
         int i = 0;
-        // skip spaces
         while (i < json.length() && Character.isWhitespace(json.charAt(i))) i++;
         if (i >= json.length() || json.charAt(i) != '[') return out;
         i++;
@@ -218,6 +273,7 @@ public class MainActivity extends Activity {
         c.examples = extractString(obj, "examples");
         c.notes = extractString(obj, "notes");
         c.packageName = extractString(obj, "package");
+        c.category = extractString(obj, "category");
         return c;
     }
 
@@ -261,5 +317,36 @@ public class MainActivity extends Activity {
         String examples;
         String notes;
         String packageName;
+        String category;
+    }
+
+    private static class CommandAdapter extends ArrayAdapter<Command> {
+        private final List<Command> items;
+
+        CommandAdapter(Context ctx, List<Command> items) {
+            super(ctx, 0, items);
+            this.items = items;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View v = convertView;
+            if (v == null) {
+                v = View.inflate(getContext(), R.layout.item_command, null);
+            }
+            TextView title = v.findViewById(R.id.text_title);
+            TextView subtitle = v.findViewById(R.id.text_subtitle);
+            TextView cat = v.findViewById(R.id.text_category);
+            Command c = items.get(position);
+            title.setText(c.name);
+            subtitle.setText(TextUtils.isEmpty(c.shortDescription) ? "" : c.shortDescription);
+            if (TextUtils.isEmpty(c.category)) {
+                cat.setVisibility(View.GONE);
+            } else {
+                cat.setVisibility(View.VISIBLE);
+                cat.setText(c.category);
+            }
+            return v;
+        }
     }
 }

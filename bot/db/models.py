@@ -25,13 +25,21 @@ class ChatSettings(Base):
     profanity_words: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # comma-separated
 
     link_filter_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
-    referral_domains: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # comma-separated
+    referral_domains: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # comma-separated (blocked)
+    allowed_domains: Mapped[Optional[str]] = mapped_column(Text, nullable=True)   # comma-separated (allowed)
+    link_mode: Mapped[str] = mapped_column(String(16), default="blocklist")      # blocklist|allowlist
+    link_allow_telegram: Mapped[bool] = mapped_column(Boolean, default=True)
 
     caps_threshold_percent: Mapped[int] = mapped_column(Integer, default=80)
     mention_limit: Mapped[int] = mapped_column(Integer, default=5)
 
     flood_messages: Mapped[int] = mapped_column(Integer, default=5)
     flood_interval_seconds: Mapped[int] = mapped_column(Integer, default=10)
+    flood_burst: Mapped[int] = mapped_column(Integer, default=3)
+    strict_newcomer_minutes: Mapped[int] = mapped_column(Integer, default=10)
+    duplicates_filter_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    duplicates_window_seconds: Mapped[int] = mapped_column(Integer, default=30)
+    duplicates_threshold: Mapped[int] = mapped_column(Integer, default=2)
 
     warn_threshold: Mapped[int] = mapped_column(Integer, default=3)
     warn_action: Mapped[str] = mapped_column(String(16), default="mute")  # mute|ban|none

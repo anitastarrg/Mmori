@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto">
+	<item
+		android:id="@+id/action_random"
+		android:title="Случайная"
+		android:icon="@android:drawable/ic_menu_rotate"
+		app:showAsAction="ifRoom" />
+	<item
+		android:id="@+id/action_reset"
+		android:title="Сбросить фильтры"
+		android:icon="@android:drawable/ic_menu_revert"
+		app:showAsAction="never" />
+	<item
+		android:id="@+id/action_toggle_categories"
+		android:title="Скрыть/показать категории"
+		android:icon="@android:drawable/ic_menu_manage"
+		app:showAsAction="never" />
+	<item
+		android:id="@+id/action_share_app"
+		android:title="Поделиться приложением"
+		android:icon="@android:drawable/ic_menu_share"
+		app:showAsAction="never" />
+	<item
+		android:id="@+id/action_about"
+		android:title="О приложении"
+		android:icon="@android:drawable/ic_menu_info_details"
+		app:showAsAction="never" />
+</menu>

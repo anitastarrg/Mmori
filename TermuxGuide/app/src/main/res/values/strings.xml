@@ -1,0 +1,5 @@
+<resources>
+	<string name="app_name">Termux Guide</string>
+	<string name="search_hint">Поиск команд</string>
+	<string name="no_results">Ничего не найдено</string>
+</resources>

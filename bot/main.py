@@ -40,6 +40,9 @@ async def main() -> None:
 		print("DRY_RUN=1: Import/DB OK. Exiting without polling.")
 		return
 
+	if not settings.bot_token:
+		raise RuntimeError("BOT_TOKEN is required. Set BOT_TOKEN env or in .env file.")
+
 	bot = Bot(token=settings.bot_token, parse_mode=ParseMode.HTML)
 	dp = Dispatcher()
 

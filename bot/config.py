@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-	bot_token: str = Field(..., alias="BOT_TOKEN")
+	bot_token: Optional[str] = Field(None, alias="BOT_TOKEN")
 	db_url: str = Field("sqlite+aiosqlite:////workspace/data/bot.db", alias="DB_URL")
 	admins: List[int] = Field(default_factory=list, alias="ADMINS")
 	log_level: str = Field("INFO", alias="LOG_LEVEL")

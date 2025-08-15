@@ -4,8 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.os.Bundle;
-import android.app.AlertDialog;
-import android.app.Activity;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.content.DialogInterface;
 import android.content.ClipboardManager;
 import android.content.ClipData;
@@ -15,6 +15,8 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.support.v7.widget.Toolbar;
+import android.support.design.widget.FloatingActionButton;
 import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -30,7 +32,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private SearchView searchView;
     private ListView listView;
@@ -47,10 +49,21 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
         searchView = findViewById(R.id.search_view);
         spinnerCategory = findViewById(R.id.spinner_category);
         listView = findViewById(R.id.list_view);
         emptyView = findViewById(R.id.empty_view);
+
+        FloatingActionButton fab = findViewById(R.id.fab_top);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listView.smoothScrollToPosition(0);
+            }
+        });
 
         loadCommandsFromAssets(this);
         sortCommandsByName();

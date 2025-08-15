@@ -3,28 +3,43 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:orientation="vertical"
-	android:padding="8dp">
+	android:background="@color/colorBackground">
 
-	<SearchView
-		android:id="@+id/search_view"
+	<android.support.v7.widget.Toolbar
+		android:id="@+id/toolbar"
+		android:layout_width="match_parent"
+		android:layout_height="?attr/actionBarSize"
+		android:background="@color/colorPrimary" />
+
+	<LinearLayout
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:queryHint="@string/search_hint" />
+		android:orientation="vertical"
+		android:padding="12dp">
 
-	<Spinner
-		android:id="@+id/spinner_category"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:paddingTop="4dp"
-		android:paddingBottom="4dp" />
+		<SearchView
+			android:id="@+id/search_view"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:queryHint="@string/search_hint" />
+
+		<Spinner
+			android:id="@+id/spinner_category"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="8dp" />
+
+	</LinearLayout>
 
 	<ListView
 		android:id="@+id/list_view"
 		android:layout_width="match_parent"
 		android:layout_height="0dp"
 		android:layout_weight="1"
-		android:divider="@android:color/darker_gray"
-		android:dividerHeight="1dp"
+		android:divider="@android:color/transparent"
+		android:dividerHeight="8dp"
+		android:paddingLeft="8dp"
+		android:paddingRight="8dp"
 		android:fastScrollEnabled="true" />
 
 	<TextView
@@ -35,5 +50,13 @@
 		android:gravity="center"
 		android:padding="16dp"
 		android:visibility="gone" />
+
+	<android.support.design.widget.FloatingActionButton
+		android:id="@+id/fab_top"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="end|bottom"
+		android:layout_margin="16dp"
+		android:src="@android:drawable/arrow_up_float" />
 
 </LinearLayout>

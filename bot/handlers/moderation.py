@@ -41,7 +41,7 @@ async def delete_message_safe(message: Message) -> None:
 
 async def is_admin(message: Message) -> bool:
 	member = await message.bot.get_chat_member(message.chat.id, message.from_user.id)
-	return member.status in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER, ChatMemberStatus.CREATOR}
+	return member.status in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}
 
 
 def _normalize_domain(domain: str) -> str:

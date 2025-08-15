@@ -271,6 +271,51 @@ async def cmd_setjoinguard(message: Message, session: AsyncSession, chat_setting
 	await message.reply("Join guard обновлен")
 
 
+@router.message(Command("setwarn"))
+async def cmd_setwarn(message: Message, session: AsyncSession, chat_settings: ChatSettings) -> None:
+	if not await is_admin(message):
+		await message.reply("Только админы")
+		return
+	parts = message.text.split()
+	if len(parts) != 4 or not parts[1].isdigit() or parts[2] not in {"mute", "ban", "none"} or not parts[3].isdigit():
+		await message.reply("Использование: /setwarn <threshold> <mute|ban|none> <seconds>")
+		return
+	await update_settings(
+		session,
+		chat_settings.chat_id,
+		warn_threshold=int(parts[1]),
+		warn_action=parts[2],
+		punish_duration_seconds=int(parts[3]),
+	)
+	await message.reply("Порог предупреждений обновлен")
+
+
+@router.message(Command("setcaps"))
+async def cmd_setcaps(message: Message, session: AsyncSession, chat_settings: ChatSettings) -> None:
+	if not await is_admin(message):
+		await message.reply("Только админы")
+		return
+	parts = message.text.split()
+	if len(parts) != 2 or not parts[1].isdigit():
+		await message.reply("Использование: /setcaps <percent>")
+		return
+	await update_settings(session, chat_settings.chat_id, caps_threshold_percent=int(parts[1]))
+	await message.reply("Порог CAPS обновлен")
+
+
+@router.message(Command("setmentions"))
+async def cmd_setmentions(message: Message, session: AsyncSession, chat_settings: ChatSettings) -> None:
+	if not await is_admin(message):
+		await message.reply("Только админы")
+		return
+	parts = message.text.split()
+	if len(parts) != 2 or not parts[1].isdigit():
+		await message.reply("Использование: /setmentions <count>")
+		return
+	await update_settings(session, chat_settings.chat_id, mention_limit=int(parts[1]))
+	await message.reply("Лимит упоминаний обновлен")
+
+
 @router.callback_query(lambda c: c.data == "export_settings")
 async def cb_export(callback: CallbackQuery, chat_settings: ChatSettings) -> None:
 	if not callback.message:
